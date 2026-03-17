@@ -58,12 +58,17 @@ app.use(express.urlencoded({ extended: true }))
 app.get('/', (_, res) => res.json({ message: 'Welcome to MultiVendor API', status: 'active', time: new Date() }))
 app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date() }))
 
-app.use('/api/auth',     authRoutes)
-app.use('/api/products', productRoutes)
-app.use('/api/orders',   orderRoutes)
-app.use('/api/vendor',   vendorRoutes)
-app.use('/api/admin',    adminRoutes)
-app.use('/api/payment',  paymentRoutes)
+const mountRoutes = (basePath) => {
+  app.use(`${basePath}/auth`,     authRoutes)
+  app.use(`${basePath}/products`, productRoutes)
+  app.use(`${basePath}/orders`,   orderRoutes)
+  app.use(`${basePath}/vendor`,   vendorRoutes)
+  app.use(`${basePath}/admin`,    adminRoutes)
+  app.use(`${basePath}/payment`,  paymentRoutes)
+}
+
+mountRoutes('/api')
+mountRoutes('') // Also mount at root in case VITE_API_URL drops the /api suffix
 
 app.use(notFound)
 app.use(errorHandler)
