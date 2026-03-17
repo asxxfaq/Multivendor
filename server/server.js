@@ -55,6 +55,7 @@ app.use('/api/payment/webhook', express.raw({ type: 'application/json' }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+app.get('/', (_, res) => res.json({ message: 'Welcome to MultiVendor API', status: 'active', time: new Date() }))
 app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date() }))
 
 app.use('/api/auth',     authRoutes)
