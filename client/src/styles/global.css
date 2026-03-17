@@ -530,11 +530,19 @@
      .show-mobile { display: block; }
      .form-row    { grid-template-columns: 1fr; }
      .form-row-3  { grid-template-columns: 1fr; }
-     .container   { padding: 0 var(--space-5); }
+     .container   { padding: 0 var(--space-4); }
      .tab-btn     { padding: 0.75rem 1.25rem; font-size: 0.75rem; }
+     .section     { padding: var(--space-12) 0; }
+     .section-sm  { padding: var(--space-8) 0; }
    }
    @media (max-width: 480px) {
-     .btn-lg      { padding: 0.875rem 1.75rem; font-size: 0.8125rem; }
-     .card-body   { padding: var(--space-5); }
-     .card-header { padding: var(--space-4) var(--space-5); }
+     .btn-lg      { padding: 0.875rem 1.5rem; font-size: 0.8125rem; }
+     .btn         { padding: 0.625rem 1.25rem; }
+     .card-body   { padding: var(--space-4); }
+     .card-header { padding: var(--space-3) var(--space-4); }
+     .table-wrap  { margin: 0 calc(-1 * var(--space-4)); padding: 0 var(--space-4); }
+     h1           { font-size: 2.25rem; }
+     h2           { font-size: 1.75rem; }
+     .page-title  { font-size: 1.5rem; margin-bottom: var(--space-4); }
+     .pagination button { width: 34px; height: 34px; font-size: 0.75rem; }
    }

@@ -307,12 +307,19 @@
     .navbar-search { max-width: 260px; }
   }
   @media (max-width: 768px) {
+    .navbar-inner     { gap: var(--space-4); }
     .navbar-search    { display: none; }
     .navbar-hamburger { display: flex; }
     .navbar-username  { display: none; }
+    .navbar-user-btn  { padding: 4px; border: none; }
+    .navbar-avatar    { width: 34px; height: 34px; }
   }
   @media (max-width: 480px) {
-    .navbar-logo-text { font-size: 1.375rem; letter-spacing: 0.12em; }
-    .navbar-top-strip { font-size: 0.6875rem; }
+    .navbar-inner     { padding: 0 12px; }
+    .navbar-logo-text { font-size: 1.25rem; letter-spacing: 0.1em; }
+    .navbar-logo-sub  { font-size: 0.5rem; }
+    .navbar-top-strip { font-size: 0.625rem; padding: 5px 0; }
+    .navbar-icon-btn  { width: 36px; height: 36px; }
+    .navbar-dropdown  { right: -40px; width: 200px; }
   }
   
