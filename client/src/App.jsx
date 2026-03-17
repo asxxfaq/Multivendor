@@ -21,7 +21,7 @@ import Home          from './pages/customer/Home'
 import Shop          from './pages/customer/Shop'
 import ProductDetail from './pages/customer/ProductDetail'
 import Cart          from './pages/customer/Cart'
-import Checkout      from './pages/customer/Checkout'
+import Checkout      from './pages/customer/CheckOut'
 import Orders        from './pages/customer/Orders'
 import Profile       from './pages/customer/Profile'
 
