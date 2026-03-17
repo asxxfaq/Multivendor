@@ -54,11 +54,12 @@ export default function Navbar() {
 
       {/* Top strip */}
       <div className="navbar-top-strip">
-        Free shipping on orders above ₹999
-        <span>|</span>
-        Easy 30-day returns
-        <span>|</span>
-        Secure payments
+        <span className="hide-mobile" style={{ display: 'inline' }}>Free shipping on orders above ₹999</span>
+        <span className="show-mobile" style={{ display: 'none' }}>Free shipping & returns</span>
+        <span className="hide-mobile" style={{ marginLeft: 6, marginRight: 6 }}>|</span>
+        <span className="hide-mobile" style={{ display: 'inline' }}>Easy 30-day returns</span>
+        <span className="hide-mobile" style={{ marginLeft: 6, marginRight: 6 }}>|</span>
+        <span className="hide-mobile" style={{ display: 'inline' }}>Secure payments</span>
       </div>
 
       <div className="container">
@@ -169,7 +170,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div className="hide-mobile" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <Link to="/login" className="btn btn-ghost btn-sm">
                   Sign in
                 </Link>
