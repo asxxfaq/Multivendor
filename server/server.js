@@ -15,8 +15,6 @@ import vendorRoutes  from './routes/vendorRoutes.js'
 import adminRoutes   from './routes/adminRoutes.js'
 import paymentRoutes from './routes/paymentRoutes.js'
 
-connectDB()
-
 const app = express()
 
 const allowedOrigins = [
@@ -57,6 +55,20 @@ app.use(express.urlencoded({ extended: true }))
 
 app.get('/', (_, res) => res.json({ message: 'Welcome to MultiVendor API', status: 'active', time: new Date() }))
 app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date() }))
+
+// ── Strict DB Connection Middleware for Serverless ──
+app.use(async (req, res, next) => {
+  try {
+    await connectDB()
+    next()
+  } catch (err) {
+    // Return explicit 500 so the user knows EXACTLY why it failed
+    res.status(500).json({ 
+      message: 'MongoDB Connection Failed', 
+      error: err.message 
+    })
+  }
+})
 
 const mountRoutes = (basePath) => {
   app.use(`${basePath}/auth`,     authRoutes)
