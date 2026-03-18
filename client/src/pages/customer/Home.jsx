@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchFeatured } from '../../redux/productSlice'
 import ProductCard from '../../components/ProductCard'
+import { toast } from 'react-toastify'
 import api from '../../utils/axiosInstance'
 import '../../styles/customer.css'
 
@@ -11,6 +12,7 @@ export default function Home() {
   const dispatch  = useDispatch()
   const navigate  = useNavigate()
   const { featured, loading } = useSelector(s => s.products)
+  const { user } = useSelector(s => s.auth)
   const [categories, setCategories] = useState([])
   const [activeCategory, setActiveCategory] = useState('')
 
@@ -25,9 +27,20 @@ export default function Home() {
     setActiveCategory(slug)
   }
 
-  // ✅ Fixed — use state to pass role
-  const handleStartSelling = () => {
+  const handleStartSelling = (e) => {
+    if (user) {
+      e.preventDefault()
+      return toast.info('You are logged in as a Customer. Please logout first to register a Vendor account.')
+    }
     navigate('/register', { state: { role: 'vendor' } })
+  }
+
+  const handleVendorLogin = (e) => {
+    if (user) {
+      e.preventDefault()
+      return toast.info('You are already logged in.')
+    }
+    navigate('/login')
   }
 
   const displayedFeatured = featured.filter(p => !activeCategory || p.category?.slug === activeCategory)
@@ -290,6 +303,7 @@ export default function Home() {
 
               <Link
                 to="/login"
+                onClick={handleVendorLogin}
                 style={{
                   display:        'inline-flex',
                   alignItems:     'center',

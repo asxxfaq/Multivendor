@@ -8,6 +8,7 @@ import './styles/global.css'
 import Navbar         from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashLayout     from './components/DashLayout'
+import ScrollToTop    from './components/ScrollToTop'
 
 // ── Auth ──────────────────────────────────────
 import Login          from './pages/auth/Login'
@@ -69,6 +70,7 @@ function CustomerGuard({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <ToastContainer
         position="top-right"
         autoClose={3000}
