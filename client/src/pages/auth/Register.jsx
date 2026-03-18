@@ -7,7 +7,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import '../../styles/auth.css'
 
-const API = '/api'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Register() {
   const dispatch = useDispatch()
