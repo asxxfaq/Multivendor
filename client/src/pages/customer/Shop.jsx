@@ -57,16 +57,19 @@ export default function Shop() {
   const handleCategoryChange = (slug) => {
     // ✅ send slug — backend handles slug → ObjectId lookup
     setParam('category', category === slug ? '' : slug)
+    setFiltersOpen(false)
   }
 
   const handleApplyPrice = () => {
     dispatch(fetchProducts({ category, sort, page, q, minPrice, maxPrice }))
+    setFiltersOpen(false)
   }
 
   const handleClearAll = () => {
     setParams({})
     setMinPrice('')
     setMaxPrice('')
+    setFiltersOpen(false)
   }
 
   return (
@@ -142,7 +145,10 @@ export default function Shop() {
             <select
               className="form-select"
               value={sort}
-              onChange={e => setParam('sort', e.target.value)}
+              onChange={e => {
+                setParam('sort', e.target.value)
+                setFiltersOpen(false)
+              }}
             >
               {SORT_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
