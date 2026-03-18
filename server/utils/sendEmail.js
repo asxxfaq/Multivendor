@@ -18,8 +18,8 @@ export const sendEmail = async ({ to, subject, html }) => {
     },
   })
 
-  // Verify connection before sending
-  await transporter.verify()
+  // Verify connection before sending (removed for Serverless compatibility)
+  // await transporter.verify()
 
   await transporter.sendMail({
     from: `"MultiShop" <${process.env.EMAIL_USER}>`,

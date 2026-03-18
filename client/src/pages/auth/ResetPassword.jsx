@@ -4,7 +4,10 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import '../../styles/auth.css'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API = import.meta.env.VITE_API_URL || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://multivendor-api-seven.vercel.app/api' 
+    : 'http://localhost:5000/api')
 
 export default function ResetPassword() {
   const navigate  = useNavigate()
