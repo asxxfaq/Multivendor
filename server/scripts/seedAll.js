@@ -59,6 +59,7 @@ const seed = async () => {
         isVerified: true,
         isActive:   true,
       })
+      console.log('✅ Vendor user 2 created')
     }
 
     // ── Create Vendor Profiles ────────────────

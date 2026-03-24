@@ -52,15 +52,6 @@ export default function Navbar() {
   return (
     <nav className="navbar">
 
-      {/* Top strip */}
-      <div className="navbar-top-strip">
-        <span className="hide-mobile" style={{ display: 'inline' }}>Free shipping on orders above ₹999</span>
-        <span className="show-mobile" style={{ display: 'none' }}>Free shipping & returns</span>
-        <span className="hide-mobile" style={{ marginLeft: 6, marginRight: 6 }}>|</span>
-        <span className="hide-mobile" style={{ display: 'inline' }}>Easy 30-day returns</span>
-        <span className="hide-mobile" style={{ marginLeft: 6, marginRight: 6 }}>|</span>
-        <span className="hide-mobile" style={{ display: 'inline' }}>Secure payments</span>
-      </div>
 
       <div className="container">
         <div className="navbar-inner">
