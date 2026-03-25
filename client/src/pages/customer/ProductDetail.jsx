@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchProduct } from '../../redux/productSlice'
 import { addToCart } from '../../redux/cartSlice'
@@ -11,6 +11,7 @@ import '../../styles/customer.css'
 
 export default function ProductDetail() {
   const { id }  = useParams()
+  const navigate = useNavigate()
   const dispatch = useDispatch()
   const { current: product, loading } = useSelector((s) => s.products)
   const [mainImg, setMainImg]   = useState(0)
@@ -37,6 +38,19 @@ export default function ProductDetail() {
       stock: product.stock, selectedSize, quantity: qty
     }))
     toast.success('Added to cart!')
+  }
+
+  const handleBuyNow = () => {
+    if (product.stock === 0) {
+      toast.error('This product is out of stock')
+      return
+    }
+    dispatch(addToCart({
+      _id: product._id, name: product.name,
+      price: product.price, image: product.images?.[0],
+      stock: product.stock, selectedSize, quantity: qty
+    }))
+    navigate('/checkout')
   }
 
   const handleReviewSubmit = async (e) => {
@@ -93,7 +107,9 @@ export default function ProductDetail() {
             <span className="price-current">₹{product.price?.toLocaleString()}</span>
             {product.comparePrice > product.price && (
               <>
-                <span className="price-original">₹{product.comparePrice?.toLocaleString()}</span>
+                <span className="price-original" style={{ textDecoration: 'line-through', color: 'var(--gray-500)', marginLeft: '8px', fontSize: '0.9em' }}>
+                  ₹{product.comparePrice?.toLocaleString()}
+                </span>
                 <span className="price-discount">{discount}% OFF</span>
               </>
             )}
@@ -125,7 +141,9 @@ export default function ProductDetail() {
             <button className="btn btn-primary btn-lg" onClick={handleAddToCart} disabled={product.stock === 0}>
               🛒 {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
-            <button className="btn btn-dark btn-lg">⚡ Buy Now</button>
+            <button className="btn btn-dark btn-lg" onClick={handleBuyNow} disabled={product.stock === 0}>
+              ⚡ Buy Now
+            </button>
           </div>
 
           <div className="product-meta">
