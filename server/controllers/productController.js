@@ -8,8 +8,29 @@ import { uploadToCloudinary } from '../middleware/uploadMiddleware.js'
 
 export const getProducts = async (req, res) => {
   try {
-    const { category, minPrice, maxPrice, sort, page = 1, limit = 12, vendor } = req.query
+    const { category, minPrice, maxPrice, sort, page = 1, limit = 12, vendor, q, search } = req.query
     const filter = { isActive: true }
+
+    const searchStr = q || search
+    if (searchStr && searchStr.trim()) {
+      const cleanSearch = searchStr.trim()
+      const searchRegex = { $regex: cleanSearch, $options: 'i' }
+      
+      const searchOr = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { tags: searchRegex },
+        { 'variants.color': searchRegex }
+      ]
+
+      const numericSearch = parseFloat(cleanSearch)
+      if (!isNaN(numericSearch)) {
+        searchOr.push({ price: { $lte: numericSearch } })
+      }
+
+      filter.$and = filter.$and || []
+      filter.$and.push({ $or: searchOr })
+    }
 
     if (category) {
       // Check if it's a valid 24-char ObjectId

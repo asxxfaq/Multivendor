@@ -89,6 +89,8 @@ export default function Profile() {
   // ── Password Change ───────────────────────────
   const handlePasswordChange = async (e) => {
     e.preventDefault()
+    if (pwdForm.currentPassword === pwdForm.newPassword)
+      return toast.error('New password must be different from your current password')
     if (pwdForm.newPassword !== pwdForm.confirmPassword)
       return toast.error('Passwords do not match')
     if (pwdForm.newPassword.length < 6)

@@ -3,7 +3,8 @@ import {
   getAllUsers, getUserById, updateUser, deleteUser,
   getAllVendors, approveVendor, rejectVendor, toggleVendorStatus,
   getAllOrders, updateOrderStatus, getAnalytics,
-  getCategories, createCategory, updateCategory, deleteCategory
+  getCategories, createCategory, updateCategory, deleteCategory,
+  getAllProducts, toggleProductStatus, deleteProduct
 } from '../controllers/adminController.js'
 import { protect } from '../middleware/authMiddleware.js'
 import { isAdmin } from '../middleware/roleMiddleware.js'
@@ -40,5 +41,10 @@ router.get('/analytics', getAnalytics)
 router.post('/categories',       uploadProduct.single('image'), createCategory)
 router.put('/categories/:id',    uploadProduct.single('image'), updateCategory)
 router.delete('/categories/:id', deleteCategory)
+
+// Products
+router.get('/products',             getAllProducts)
+router.put('/products/:id/toggle',  toggleProductStatus)
+router.delete('/products/:id',      deleteProduct)
 
 export default router

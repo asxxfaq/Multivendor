@@ -7,15 +7,25 @@ export default function VendorProducts() {
   const [products, setProducts] = useState([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage]         = useState(1)
+  const [pages, setPages]       = useState(1)
+  const [total, setTotal]       = useState(0)
+  const [limit]                 = useState(10)
+  const [stats, setStats]       = useState({ total: 0, active: 0, hidden: 0, outOfStock: 0 })
   const [error, setError]       = useState('')
 
-  useEffect(() => {
-    api.get('/vendor/products')
+  const loadProducts = () => {
+    setLoading(true)
+    api.get(`/vendor/products?page=${page}&limit=${limit}&search=${debouncedSearch}`)
       .then(r => {
         const data = r.data
-        if (Array.isArray(data))               setProducts(data)
-        else if (Array.isArray(data.products)) setProducts(data.products)
-        else                                   setProducts([])
+        setProducts(data.products || [])
+        setTotal(data.total || 0)
+        setPages(data.pages || 1)
+        if (data.stats) {
+          setStats(data.stats)
+        }
       })
       .catch(err => {
         const msg = err.response?.data?.message || 'Failed to load products'
@@ -23,14 +33,26 @@ export default function VendorProducts() {
         toast.error(msg)
       })
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    loadProducts()
+  }, [page, limit, debouncedSearch])
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return
     try {
       await api.delete(`/products/${id}`)
-      setProducts(p => p.filter(x => x._id !== id))
       toast.success('Product deleted successfully')
+      loadProducts()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Delete failed')
     }
@@ -42,17 +64,26 @@ export default function VendorProducts() {
         { isActive: !current },
         { headers: { 'Content-Type': 'application/json' } }
       )
-      setProducts(p => p.map(x => x._id === id ? { ...x, isActive: !current } : x))
       toast.success(current ? 'Product hidden from shop' : 'Product listed on shop')
+      loadProducts()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Update failed')
     }
   }
 
-  const filtered = products.filter(p =>
-    p.name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.category?.name?.toLowerCase().includes(search.toLowerCase())
-  )
+  const renderPaginationRange = () => {
+    const range = []
+    const maxVisible = 5
+    let start = Math.max(1, page - 2)
+    let end = Math.min(pages, start + maxVisible - 1)
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1)
+    }
+    for (let i = start; i <= end; i++) {
+      if (i >= 1 && i <= pages) range.push(i)
+    }
+    return range
+  }
 
   // ── Loading ───────────────────────────────────────
   if (loading) return (
@@ -82,7 +113,7 @@ export default function VendorProducts() {
         Failed to load products
       </h3>
       <p style={{ color: 'var(--gray-500)', marginBottom: 24, maxWidth: 360 }}>{error}</p>
-      <button className="btn btn-primary" onClick={() => window.location.reload()}>
+      <button className="btn btn-primary" onClick={() => loadProducts()}>
         Try Again
       </button>
     </div>
@@ -113,11 +144,13 @@ export default function VendorProducts() {
           </h1>
           <p style={{
             fontSize:   '0.875rem',
-            color:      'var(--gray-500)',
+            color:      'var(--gray-50)',
             margin:     0,
             fontWeight: 300,
           }}>
-            {products.length} product{products.length !== 1 ? 's' : ''} in your store
+            <span style={{ color: 'var(--gray-500)' }}>
+              {stats.total} product{stats.total !== 1 ? 's' : ''} in your store
+            </span>
           </p>
         </div>
         <Link to="/vendor/add" className="btn btn-primary">
@@ -127,7 +160,7 @@ export default function VendorProducts() {
 
       {/* ── Empty State ── */}
       
-      {products.length === 0 ? (
+      {stats.total === 0 && !loading ? (
         <div style={{
           background:     'var(--white)',
           border:         '1px solid var(--gray-100)',
@@ -173,28 +206,28 @@ export default function VendorProducts() {
             {[
               {
                 label: 'Total Products',
-                value: products.length,
+                value: stats.total,
                 color: 'var(--gold, #C9A84C)',
                 bg:    'var(--gold-pale, #F9F3E3)',
                 icon:  '📦',
               },
               {
                 label: 'Active',
-                value: products.filter(p => p.isActive).length,
+                value: stats.active,
                 color: 'var(--success)',
                 bg:    'var(--success-light)',
                 icon:  '✅',
               },
               {
                 label: 'Hidden',
-                value: products.filter(p => !p.isActive).length,
+                value: stats.hidden,
                 color: 'var(--gray-500)',
                 bg:    'var(--gray-100)',
                 icon:  '🙈',
               },
               {
                 label: 'Out of Stock',
-                value: products.filter(p => p.stock === 0).length,
+                value: stats.outOfStock,
                 color: 'var(--danger)',
                 bg:    'var(--danger-light)',
                 icon:  '⚠️',
@@ -283,7 +316,7 @@ export default function VendorProducts() {
                   padding:      '2px 8px',
                   borderRadius: 'var(--radius-full)',
                 }}>
-                  {filtered.length}
+                  {total}
                 </span>
               </div>
 
@@ -365,7 +398,7 @@ export default function VendorProducts() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.length === 0 ? (
+                  {products.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{
                         textAlign:  'center',
@@ -374,10 +407,10 @@ export default function VendorProducts() {
                         fontStyle:  'italic',
                         fontWeight: 300,
                       }}>
-                        No products match "{search}"
+                        {debouncedSearch ? `No products match "${debouncedSearch}"` : 'No products found'}
                       </td>
                     </tr>
-                  ) : filtered.map((p, idx) => (
+                  ) : products.map((p, idx) => (
                     <tr
                       key={p._id}
                       style={{
@@ -609,21 +642,34 @@ export default function VendorProducts() {
               display:        'flex',
               alignItems:     'center',
               justifyContent: 'space-between',
-              padding:        '12px 24px',
+              padding:        '16px 24px',
               borderTop:      '1px solid var(--gray-100)',
               background:     'var(--ivory, #FDFAF4)',
               fontSize:       '0.8125rem',
               color:          'var(--gray-400)',
               fontWeight:     300,
               flexWrap:       'wrap',
-              gap:            8,
+              gap:            16,
             }}>
               <span>
-                Showing <strong style={{ color: 'var(--gray-600)', fontWeight: 500 }}>{filtered.length}</strong> of{' '}
-                <strong style={{ color: 'var(--gray-600)', fontWeight: 500 }}>{products.length}</strong> products
-                {search && ` matching "${search}"`}
+                Showing <strong style={{ color: 'var(--gray-600)', fontWeight: 500 }}>{products.length}</strong> of{' '}
+                <strong style={{ color: 'var(--gray-600)', fontWeight: 500 }}>{total}</strong> products
+                {debouncedSearch && ` matching "${debouncedSearch}"`}
               </span>
-              {search && (
+
+              {pages > 1 && (
+                <div className="pagination" style={{ padding: 0, marginTop: 0 }}>
+                  <button onClick={() => setPage(1)} disabled={page === 1} style={{ width: 34, height: 34 }}>&laquo;&laquo;</button>
+                  <button onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1} style={{ width: 34, height: 34 }}>&laquo;</button>
+                  {renderPaginationRange().map(n => (
+                    <button key={n} onClick={() => setPage(n)} className={page === n ? 'active' : ''} style={{ width: 34, height: 34 }}>{n}</button>
+                  ))}
+                  <button onClick={() => setPage(p => Math.min(p + 1, pages))} disabled={page === pages} style={{ width: 34, height: 34 }}>&raquo;</button>
+                  <button onClick={() => setPage(pages)} disabled={page === pages} style={{ width: 34, height: 34 }}>&raquo;&raquo;</button>
+                </div>
+              )}
+
+              {debouncedSearch && (
                 <button
                   onClick={() => setSearch('')}
                   style={{

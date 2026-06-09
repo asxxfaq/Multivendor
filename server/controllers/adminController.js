@@ -176,3 +176,93 @@ export const deleteCategory = async (req, res) => {
   await category.deleteOne()
   res.json({ message: 'Category deleted' })
 }
+
+// ─── Products (Admin) ──────────────────────────────────
+export const getAllProducts = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '' } = req.query
+
+    const filter = {}
+    if (search && search.trim()) {
+      const cleanSearch = search.trim()
+      const searchRegex = { $regex: cleanSearch, $options: 'i' }
+      
+      const searchOr = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { tags: searchRegex },
+        { 'variants.color': searchRegex }
+      ]
+
+      const numericSearch = parseFloat(cleanSearch)
+      if (!isNaN(numericSearch)) {
+        searchOr.push({ price: { $lte: numericSearch } })
+      }
+
+      filter.$and = filter.$and || []
+      filter.$and.push({ $or: searchOr })
+    }
+
+    const products = await Product.find(filter)
+      .populate('category', 'name slug')
+      .populate('vendor', 'storeName')
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit))
+
+    const total = await Product.countDocuments(filter)
+
+    // Calculate stats for admin products
+    const active = await Product.countDocuments({ isActive: true })
+    const hidden = await Product.countDocuments({ isActive: false })
+    const outOfStock = await Product.countDocuments({ stock: 0 })
+    const totalCount = await Product.countDocuments()
+
+    res.json({
+      products,
+      total,
+      active,
+      hidden,
+      outOfStock,
+      totalCount,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
+    })
+  } catch (err) {
+    console.error('getAllProducts error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
+}
+
+export const toggleProductStatus = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+    if (!product) return res.status(404).json({ message: 'Product not found' })
+    product.isActive = !product.isActive
+    await product.save()
+    res.json({ message: `Product status updated`, product })
+  } catch (err) {
+    console.error('toggleProductStatus error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
+}
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+    if (!product) return res.status(404).json({ message: 'Product not found' })
+
+    // Delete images from Cloudinary if they exist
+    if (product.imageIds && product.imageIds.length > 0) {
+      await Promise.all(
+        product.imageIds.map(id => cloudinary.uploader.destroy(id))
+      )
+    }
+
+    await product.deleteOne()
+    res.json({ message: 'Product deleted successfully' })
+  } catch (err) {
+    console.error('deleteProduct admin error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
+}

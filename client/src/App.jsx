@@ -39,6 +39,7 @@ import AdminVendors    from './pages/admin/Vendors'
 import AdminUsers      from './pages/admin/Users'
 import AdminOrders     from './pages/admin/Orders'
 import AdminCategories from './pages/admin/Categories'
+import AdminProducts   from './pages/admin/Products'
 
 // ── Smart redirect based on role ──────────────
 function RoleRedirect() {
@@ -137,6 +138,7 @@ export default function App() {
             <Route path="/admin/users"      element={<AdminUsers />} />
             <Route path="/admin/orders"     element={<AdminOrders />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/products"   element={<AdminProducts />} />
           </Route>
         </Route>
 

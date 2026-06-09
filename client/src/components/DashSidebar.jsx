@@ -12,11 +12,12 @@ const vendorLinks = [
 ]
 
 const adminLinks = [
-  { to: '/admin',             icon: 'grid',   label: 'Dashboard',  section: 'main'     },
-  { to: '/admin/vendors',     icon: 'store',  label: 'Vendors',    section: 'main'     },
-  { to: '/admin/users',       icon: 'users',  label: 'Users',      section: 'main'     },
-  { to: '/admin/orders',      icon: 'orders', label: 'Orders',     section: 'main'     },
-  { to: '/admin/categories',  icon: 'tag',    label: 'Categories', section: 'settings' },
+  { to: '/admin',             icon: 'grid',    label: 'Dashboard',  section: 'main'     },
+  { to: '/admin/vendors',     icon: 'store',   label: 'Vendors',    section: 'main'     },
+  { to: '/admin/users',       icon: 'users',   label: 'Users',      section: 'main'     },
+  { to: '/admin/products',    icon: 'package', label: 'Products',   section: 'main'     },
+  { to: '/admin/orders',      icon: 'orders',  label: 'Orders',     section: 'main'     },
+  { to: '/admin/categories',  icon: 'tag',     label: 'Categories', section: 'settings' },
 ]
 
 // ── SVG Icons ─────────────────────────────────

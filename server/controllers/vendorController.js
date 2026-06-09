@@ -168,7 +168,23 @@ export const getVendorProducts = async (req, res) => {
     // Build filter
     const filter = { vendor: req.vendor._id }
     if (search && search.trim()) {
-      filter.name = { $regex: search.trim(), $options: 'i' }
+      const cleanSearch = search.trim()
+      const searchRegex = { $regex: cleanSearch, $options: 'i' }
+      
+      const searchOr = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { tags: searchRegex },
+        { 'variants.color': searchRegex }
+      ]
+
+      const numericSearch = parseFloat(cleanSearch)
+      if (!isNaN(numericSearch)) {
+        searchOr.push({ price: { $lte: numericSearch } })
+      }
+
+      filter.$and = filter.$and || []
+      filter.$and.push({ $or: searchOr })
     }
 
     const products = await Product.find(filter)
@@ -180,11 +196,23 @@ export const getVendorProducts = async (req, res) => {
 
     const total = await Product.countDocuments(filter)
 
+    // Unfiltered counts for vendor stats dashboard
+    const activeCount = await Product.countDocuments({ vendor: req.vendor._id, isActive: true })
+    const hiddenCount = await Product.countDocuments({ vendor: req.vendor._id, isActive: false })
+    const outOfStockCount = await Product.countDocuments({ vendor: req.vendor._id, stock: 0 })
+    const totalCount = await Product.countDocuments({ vendor: req.vendor._id })
+
     res.json({
       products,
       total,
       page:  Number(page),
       pages: Math.ceil(total / Number(limit)),
+      stats: {
+        total: totalCount,
+        active: activeCount,
+        hidden: hiddenCount,
+        outOfStock: outOfStockCount,
+      }
     })
   } catch (err) {
     console.error('getVendorProducts error:', err.message)
