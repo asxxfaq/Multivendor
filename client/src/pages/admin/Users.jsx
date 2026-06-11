@@ -13,12 +13,13 @@ export default function AdminUsers() {
     api.get(`/admin/users${q}`).then(r => setUsers(r.data.users || [])).finally(() => setLoading(false))
   }, [roleFilter])
 
-  const handleDeactivate = async (id) => {
-    if (!window.confirm('Deactivate this user?')) return
+  const handleToggleActive = async (id, currentStatus) => {
+    const action = currentStatus ? 'deactivate' : 'activate'
+    if (!window.confirm(`Are you sure you want to ${action} this user?`)) return
     try {
-      await api.delete(`/admin/users/${id}`)
-      setUsers(u => u.map(x => x._id === id ? {...x, isActive: false} : x))
-      toast.success('User deactivated')
+      await api.put(`/admin/users/${id}/toggle`)
+      setUsers(u => u.map(x => x._id === id ? {...x, isActive: !currentStatus} : x))
+      toast.success(`User ${currentStatus ? 'deactivated' : 'activated'}`)
     } catch { toast.error('Failed') }
   }
 
@@ -72,8 +73,13 @@ export default function AdminUsers() {
                   <td style={{ color: 'var(--gray-500)', fontSize: '0.8125rem' }}>{new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
                   <td><span className={`badge ${u.isActive ? 'badge-success' : 'badge-danger'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
                   <td>
-                    {u.role !== 'admin' && u.isActive && (
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDeactivate(u._id)}>Deactivate</button>
+                    {u.role !== 'admin' && (
+                      <button 
+                        className={`btn ${u.isActive ? 'btn-danger' : 'btn-success'} btn-sm`} 
+                        onClick={() => handleToggleActive(u._id, u.isActive)}
+                      >
+                        {u.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
                     )}
                   </td>
                 </tr>

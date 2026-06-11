@@ -1,6 +1,6 @@
 import express from 'express'
 import {
-  getAllUsers, getUserById, updateUser, deleteUser,
+  getAllUsers, getUserById, updateUser, deleteUser, toggleUserStatus,
   getAllVendors, approveVendor, rejectVendor, toggleVendorStatus,
   getAllOrders, updateOrderStatus, getAnalytics,
   getCategories, createCategory, updateCategory, deleteCategory,
@@ -13,16 +13,20 @@ import { uploadProduct } from '../middleware/uploadMiddleware.js'
 const router = express.Router()
 
 // ✅ PUBLIC — must be BEFORE router.use(protect, isAdmin)
+/*********************************************************/
+// Note: Keeping categories public route definition above
+/*********************************************************/
 router.get('/categories', getCategories)
 
 // ── All routes below require admin login ──────
 router.use(protect, isAdmin)
 
 // Users
-router.get('/users',        getAllUsers)
-router.get('/users/:id',    getUserById)
-router.put('/users/:id',    updateUser)
-router.delete('/users/:id', deleteUser)
+router.get('/users',             getAllUsers)
+router.get('/users/:id',         getUserById)
+router.put('/users/:id',         updateUser)
+router.delete('/users/:id',      deleteUser)
+router.put('/users/:id/toggle',  toggleUserStatus)
 
 // Vendors
 router.get('/vendors',             getAllVendors)

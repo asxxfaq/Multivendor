@@ -99,6 +99,26 @@ const test = async () => {
       console.log(`   - new isActive status: ${toggleRes.data.product.isActive}`)
     }
 
+    // 5. Get users and toggle user status
+    console.log('\n--- Testing User Activation Toggle ---')
+    const usersRes = await axios.get(
+      `${API_URL}/admin/users`,
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    )
+    const targetUser = usersRes.data.users.find(u => u.role !== 'admin')
+    if (targetUser) {
+      console.log(`   - Target user: ${targetUser.name} (${targetUser.email}), current isActive: ${targetUser.isActive}`)
+      const toggleUserRes = await axios.put(
+        `${API_URL}/admin/users/${targetUser._id}/toggle`,
+        {},
+        { headers: { Authorization: `Bearer ${adminToken}` } }
+      )
+      console.log(`✅ User Toggle response status: ${toggleUserRes.status}`)
+      console.log(`   - new isActive status: ${toggleUserRes.data.user.isActive}`)
+    } else {
+      console.log('⚠️ No non-admin user found to toggle status')
+    }
+
     console.log('\n🎉 ALL ENDPOINT TESTS PASSED SUCCESSFULLY!')
     process.exit(0)
   } catch (err) {

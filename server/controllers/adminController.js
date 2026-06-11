@@ -35,6 +35,22 @@ export const deleteUser = async (req, res) => {
   res.json({ message: 'User deactivated' })
 }
 
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+    if (!user) return res.status(404).json({ message: 'User not found' })
+    if (user.role === 'admin') {
+      return res.status(400).json({ message: 'Cannot deactivate admin accounts' })
+    }
+    user.isActive = !user.isActive
+    await user.save()
+    res.json({ message: `User ${user.isActive ? 'activated' : 'deactivated'}`, user })
+  } catch (err) {
+    console.error('toggleUserStatus error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
+}
+
 // ─── Vendors ──────────────────────────────────────────
 export const getAllVendors = async (req, res) => {
   const { approved, page = 1, limit = 20 } = req.query
