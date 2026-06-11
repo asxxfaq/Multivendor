@@ -7,13 +7,34 @@ import cloudinary from '../config/cloudinary.js'
 
 // ─── Users ────────────────────────────────────────────
 export const getAllUsers = async (req, res) => {
-  const { page = 1, limit = 20, role } = req.query
-  const filter = role ? { role } : {}
-  const users = await User.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(Number(limit)).skip((Number(page) - 1) * Number(limit))
-  const total = await User.countDocuments(filter)
-  res.json({ users, total })
+  try {
+    const { page = 1, limit = 20, role, search = '' } = req.query
+    const filter = role ? { role } : {}
+
+    if (search && search.trim()) {
+      const cleanSearch = search.trim()
+      const searchRegex = { $regex: cleanSearch, $options: 'i' }
+      filter.$or = [
+        { name: searchRegex },
+        { email: searchRegex }
+      ]
+    }
+
+    const users = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit))
+    const total = await User.countDocuments(filter)
+    res.json({
+      users,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit))
+    })
+  } catch (err) {
+    console.error('getAllUsers error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
 }
 
 export const getUserById = async (req, res) => {
@@ -53,16 +74,47 @@ export const toggleUserStatus = async (req, res) => {
 
 // ─── Vendors ──────────────────────────────────────────
 export const getAllVendors = async (req, res) => {
-  const { approved, page = 1, limit = 20 } = req.query
-  const filter = {}
-  if (approved === 'true')  filter.isApproved = true
-  if (approved === 'false') filter.isApproved = false
-  const vendors = await Vendor.find(filter)
-    .populate('user', 'name email phone')
-    .sort({ createdAt: -1 })
-    .limit(Number(limit)).skip((Number(page) - 1) * Number(limit))
-  const total = await Vendor.countDocuments(filter)
-  res.json({ vendors, total })
+  try {
+    const { approved, page = 1, limit = 20, search = '' } = req.query
+    const filter = {}
+    if (approved === 'true')  filter.isApproved = true
+    if (approved === 'false') filter.isApproved = false
+
+    if (search && search.trim()) {
+      const cleanSearch = search.trim()
+      const searchRegex = { $regex: cleanSearch, $options: 'i' }
+
+      // 1. Find matching users first to search by owner name or email
+      const matchingUsers = await User.find({
+        $or: [
+          { name: searchRegex },
+          { email: searchRegex }
+        ]
+      }).select('_id')
+      const userIds = matchingUsers.map(u => u._id)
+
+      filter.$or = [
+        { storeName: searchRegex },
+        { user: { $in: userIds } }
+      ]
+    }
+
+    const vendors = await Vendor.find(filter)
+      .populate('user', 'name email phone')
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit))
+    const total = await Vendor.countDocuments(filter)
+    res.json({
+      vendors,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit))
+    })
+  } catch (err) {
+    console.error('getAllVendors error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
 }
 
 export const approveVendor = async (req, res) => {
@@ -158,8 +210,34 @@ export const getAnalytics = async (req, res) => {
 
 // ─── Categories ───────────────────────────────────────
 export const getCategories = async (req, res) => {
-  const categories = await Category.find().populate('parent', 'name').sort({ order: 1 })
-  res.json(categories)
+  try {
+    const { page, limit, search } = req.query
+    if (page && limit) {
+      const filter = {}
+      if (search && search.trim()) {
+        filter.name = { $regex: search.trim(), $options: 'i' }
+      }
+      const skip = (Number(page) - 1) * Number(limit)
+      const categories = await Category.find(filter)
+        .populate('parent', 'name')
+        .sort({ order: 1 })
+        .limit(Number(limit))
+        .skip(skip)
+      const total = await Category.countDocuments(filter)
+      return res.json({
+        categories,
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit))
+      })
+    } else {
+      const categories = await Category.find().populate('parent', 'name').sort({ order: 1 })
+      return res.json(categories)
+    }
+  } catch (err) {
+    console.error('getCategories error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
 }
 
 export const createCategory = async (req, res) => {

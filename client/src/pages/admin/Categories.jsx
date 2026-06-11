@@ -10,8 +10,36 @@ export default function AdminCategories() {
   const [saving, setSaving] = useState(false)
   const [editId, setEditId] = useState(null)
 
-  const load = () => api.get('/admin/categories').then(r => setCategories(r.data)).finally(() => setLoading(false))
-  useEffect(() => { load() }, [])
+  const [page, setPage]             = useState(1)
+  const [pages, setPages]           = useState(1)
+  const [total, setTotal]           = useState(0)
+  const [limit]                     = useState(10)
+  const [search, setSearch]         = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  const load = () => {
+    setLoading(true)
+    api.get(`/admin/categories?page=${page}&limit=${limit}&search=${debouncedSearch}`)
+      .then(r => {
+        setCategories(r.data.categories || [])
+        setTotal(r.data.total || 0)
+        setPages(r.data.pages || 1)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    load()
+  }, [page, debouncedSearch])
 
   const setF = (k) => (e) => setForm(f => ({...f, [k]: e.target.value}))
 
@@ -52,7 +80,7 @@ export default function AdminCategories() {
       <div className="dash-content-header">
         <div>
           <div className="dash-content-title">Categories</div>
-          <div className="dash-content-subtitle">{categories.length} product categories</div>
+          <div className="dash-content-subtitle">{total} product categories</div>
         </div>
         <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditId(null); setForm({ name: '', description: '' }) }}>+ Add Category</button>
       </div>
@@ -79,11 +107,26 @@ export default function AdminCategories() {
       )}
 
       <div className="data-card">
+        <div className="data-card-header">
+          <h3>All Categories</h3>
+          <div className="data-card-tools">
+            <div className="search-input-wrap">
+              <svg className="search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input placeholder="Search categories…" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+          </div>
+        </div>
         <div className="table-wrap">
           <table className="table">
             <thead><tr><th>Name</th><th>Slug</th><th>Description</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
-              {categories.map(cat => (
+              {categories.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--gray-400)', fontStyle: 'italic' }}>
+                    {debouncedSearch ? `No categories match "${debouncedSearch}"` : 'No categories found'}
+                  </td>
+                </tr>
+              ) : categories.map(cat => (
                 <tr key={cat._id}>
                   <td style={{ fontWeight: 600 }}>{cat.name}</td>
                   <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--gray-500)' }}>{cat.slug}</td>
@@ -99,6 +142,68 @@ export default function AdminCategories() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Footer with pagination */}
+        <div style={{
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'space-between',
+          padding:        '16px 24px',
+          borderTop:      '1px solid var(--gray-100)',
+          background:     'var(--ivory, #FDFAF4)',
+          fontSize:       '0.8125rem',
+          color:          'var(--gray-500)',
+          fontWeight:     300,
+          flexWrap:       'wrap',
+          gap:            16,
+        }}>
+          <span>
+            Showing <strong style={{ color: 'var(--gray-800)', fontWeight: 500 }}>{categories.length}</strong> of{' '}
+            <strong style={{ color: 'var(--gray-800)', fontWeight: 500 }}>{total}</strong> categories
+            {debouncedSearch && ` matching "${debouncedSearch}"`}
+          </span>
+
+          {pages > 1 && (
+            <div className="pagination" style={{ padding: 0, marginTop: 0 }}>
+              <button onClick={() => setPage(1)} disabled={page === 1} style={{ width: 34, height: 34 }}>&laquo;&laquo;</button>
+              <button onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1} style={{ width: 34, height: 34 }}>&laquo;</button>
+              {(() => {
+                const range = []
+                const maxVisible = 5
+                let start = Math.max(1, page - 2)
+                let end = Math.min(pages, start + maxVisible - 1)
+                if (end - start + 1 < maxVisible) {
+                  start = Math.max(1, end - maxVisible + 1)
+                }
+                for (let i = start; i <= end; i++) {
+                  if (i >= 1 && i <= pages) range.push(i)
+                }
+                return range
+              })().map(n => (
+                <button key={n} onClick={() => setPage(n)} className={page === n ? 'active' : ''} style={{ width: 34, height: 34 }}>{n}</button>
+              ))}
+              <button onClick={() => setPage(p => Math.min(p + 1, pages))} disabled={page === pages} style={{ width: 34, height: 34 }}>&raquo;</button>
+              <button onClick={() => setPage(pages)} disabled={page === pages} style={{ width: 34, height: 34 }}>&raquo;&raquo;</button>
+            </div>
+          )}
+
+          {debouncedSearch && (
+            <button
+              onClick={() => setSearch('')}
+              style={{
+                background:  'none',
+                border:      'none',
+                cursor:      'pointer',
+                color:       'var(--gold-dark, #9A7A2E)',
+                fontSize:    '0.8125rem',
+                fontWeight:  500,
+                textDecoration: 'underline',
+              }}
+            >
+              Clear search
+            </button>
+          )}
         </div>
       </div>
     </>

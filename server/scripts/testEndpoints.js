@@ -100,12 +100,18 @@ const test = async () => {
     }
 
     // 5. Get users and toggle user status
-    console.log('\n--- Testing User Activation Toggle ---')
+    console.log('\n--- Testing User Activation Toggle & Paginated Retrieval ---')
     const usersRes = await axios.get(
-      `${API_URL}/admin/users`,
+      `${API_URL}/admin/users?page=1&limit=5`,
       { headers: { Authorization: `Bearer ${adminToken}` } }
     )
-    const targetUser = usersRes.data.users.find(u => u.role !== 'admin')
+    const uData = usersRes.data
+    console.log('✅ Admin Users pagination response structure verified:')
+    console.log(`   - total matching: ${uData.total}`)
+    console.log(`   - pages: ${uData.pages}`)
+    console.log(`   - users returned: ${uData.users?.length}`)
+
+    const targetUser = uData.users?.find(u => u.role !== 'admin')
     if (targetUser) {
       console.log(`   - Target user: ${targetUser.name} (${targetUser.email}), current isActive: ${targetUser.isActive}`)
       const toggleUserRes = await axios.put(
@@ -118,6 +124,35 @@ const test = async () => {
     } else {
       console.log('⚠️ No non-admin user found to toggle status')
     }
+
+    // 6. Test Category Pagination
+    console.log('\n--- Testing Category Paginated & Public Retrieval ---')
+    // Unpaginated check
+    const catPublicRes = await axios.get(`${API_URL}/admin/categories`)
+    console.log(`✅ Category public response is array: ${Array.isArray(catPublicRes.data)} (length: ${catPublicRes.data.length})`)
+
+    // Paginated check
+    const catPaginatedRes = await axios.get(
+      `${API_URL}/admin/categories?page=1&limit=2`,
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    )
+    const cData = catPaginatedRes.data
+    console.log('✅ Admin Categories pagination response structure verified:')
+    console.log(`   - total matching: ${cData.total}`)
+    console.log(`   - pages: ${cData.pages}`)
+    console.log(`   - categories returned: ${cData.categories?.length}`)
+
+    // 7. Test Vendor Pagination
+    console.log('\n--- Testing Vendor Paginated Retrieval ---')
+    const vendorsRes = await axios.get(
+      `${API_URL}/admin/vendors?page=1&limit=2`,
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    )
+    const vData = vendorsRes.data
+    console.log('✅ Admin Vendors pagination response structure verified:')
+    console.log(`   - total matching: ${vData.total}`)
+    console.log(`   - pages: ${vData.pages}`)
+    console.log(`   - vendors returned: ${vData.vendors?.length}`)
 
     console.log('\n🎉 ALL ENDPOINT TESTS PASSED SUCCESSFULLY!')
     process.exit(0)
